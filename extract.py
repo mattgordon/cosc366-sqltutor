@@ -158,6 +158,8 @@ def classify_problems(subms):
         elif subms[i].problem_id == subms[i+1].problem_id:
             if should_skip_subm(subms[i+1]):
                 outcome = 'abandoned'
+            elif subms[i+1].begin_session is not None:
+                outcome = 'abandoned'
             else:
                 outcome = 'not_abandoned'
         else:

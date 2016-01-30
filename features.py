@@ -55,7 +55,8 @@ class CumulativeStatisticsFeatureBase(FeatureBase, metaclass=ABCMeta):
     
     def new_submission(self, submission):
         super().new_submission(submission)
-        if self.clear_src_values_for_session():
+        if self.clear_src_values_for_session() and \
+            submission.begin_session is not None:
             self._mean_values_src = []
             self._stdev_values_src = []
             self._max_values_src = []
@@ -84,7 +85,7 @@ class CumulativeStatisticsFeatureBase(FeatureBase, metaclass=ABCMeta):
                 default=None))
     
     def clear_src_values_for_session(self):
-        return False
+        return True
         
     def use_values(self):
         return False
@@ -409,6 +410,7 @@ class TimeTakenPrev(PreviousProblemFeatureBase):
             if time > 1000000:
                 print(last_sub.submit_time)
                 print(first_sub.begin_time)
+            return time
         except TypeError:
             return None
 
@@ -614,8 +616,7 @@ class TimeSinceSessionStartPrev(PreviousProblemFeatureBase):
         time = (self._prev_prob_submissions[0].begin_time -
             self._session_start).total_seconds()
         if time > 100000:
-            print(self._submission.submit_time)
-            print('huh?' + str(time))
+            print('Long time since session start ?' + str(time))
         assert time >= 0
         return time
 
@@ -925,6 +926,31 @@ class IdenticalSubmission(StudentLevel):
         else:
             return False
 
+
+class AttemptedCompletedDifference(FeatureBase):
+    @property
+    def name(self):
+        return "session_attempted_completed_difference"
+    
+    @property
+    def type(self):
+        return "numeric"
+    
+    def __init__(self):
+        super().__init__()
+        self._attempted_problems = set()
+        self._completed_problems = set()
+    
+    def _submission_value(self):
+        if self._submission.begin_session is not None:
+            self._attempted_problems = set()
+            self._completed_problems = set()
+        self._attempted_problems.add(self._submission.problem_id)
+        if self._submission.solved:
+            self._completed_problems.add(self._submission.problem_id)
+        assert len(self._attempted_problems) >= len(self._completed_problems)
+        return len(self._attempted_problems) - len(self._completed_problems)
+
 def build_features(submissions):
     submission_features = [feature() for feature in FEATURES]
     for submission in submissions:
@@ -975,5 +1001,6 @@ FEATURES = [
     StudentLevel,
     StudentLevelComplexityDifference,
     IdenticalSubmission,
-    TimeUntilFirstSubmission
+    TimeUntilFirstSubmission,
+    AttemptedCompletedDifference
 ]
