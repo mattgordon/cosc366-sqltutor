@@ -76,6 +76,7 @@ def extract_data(in_file):
     for i in range(len(features[0].values)):
         if problems_feature.values[i] < 2:
             indices_to_delete.append(i)
+    # delete back-to-front
     indices_to_delete.reverse()
     for i in indices_to_delete:
         for feature in features:

@@ -287,6 +287,7 @@ class PostProcessEvent(MultilineLogEvent):
         space_count = 0
         last_line = init_line
         final_result = init_line
+        # there another blank line before the terminating blank line
         while space_count < 2:
             last_line = self.file.readline()
             final_result += last_line
